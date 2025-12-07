@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Simple MP3 Player</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        .song {
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 6px 10px;
+            margin-left: 10px;
+        }
+
+        .upload-box {
+            margin-top: 25px;
+            padding: 15px;
+            border: 2px dashed #777;
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>🎵 MP3 PLAYER</h2>
+
+    <h3>My Song List</h3>
+
+    {% for song in songs %}
+    <div class="song">
+        {{ loop.index }}. {{ song }}
+        <button onclick="playSong('{{ song }}')">Play</button>
+    </div>
+    {% endfor %}
+
+    <br><br>
+
+    <audio id="player" controls style="width:100%; display:none;"></audio>
+
+    <br><br>
+
+    <button onclick="sendCommand('P')">Pause</button>
+    <button onclick="sendCommand('R')">Resume</button>
+    <button onclick="sendCommand('S')">Stop</button>
+
+    <!-- UPLOAD SECTION -->
+    <div class="upload-box">
+        <h4>Upload Your Music</h4>
+
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".mp3" required>
+            <br><br>
+            <button type="submit">Upload</button>
+        </form>
+    </div>
+    <h3>Select a Song</h3>
+
+    <select id="songDropdown" onchange="playSelectedSong()">
+    <option value="" disabled selected>Choose a song...</option>
+
+    {% for song in songs %}
+        <option value="{{ song }}">{{ song }}</option>
+    {% endfor %}
+</select>
+
+    <br><br>
+
+    <audio id="player" controls style="width:100%; display:none;"></audio>
+
+
+    <script>
+        const player = document.getElementById("player");
+
+        function playSong(song) {
+            player.src = "/static/music/" + song;
+            player.style.display = "block";
+            player.play();
+            fetch("/play/" + song);
+        }
+
+        function sendCommand(cmd) {
+            fetch("/control/" + cmd);
+            if (cmd === "P") player.pause();
+            if (cmd === "R") player.play();
+            if (cmd === "S") {
+                player.pause();
+                player.currentTime = 0;
+            }
+        }
+
+        function playSelectedSong() {
+            const dropdown = document.getElementById("songDropdown");
+            const song = dropdown.value;
+
+            if (!song) return;
+
+            player.src = "/static/music/" + song + "?v=" + Date.now();
+            player.style.display = "block";
+            player.play();
+
+            fetch("/play/" + song);
+        }
+    </script>
+
+</body>
+
+</html>
